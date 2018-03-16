@@ -418,7 +418,8 @@ class GenSource(val schema: SchemaDecl,
     
 {makeWritesAttribute}{makeWritesChildNodes}  }}</source>
 
-    def fixedAttributeWrites = buildAttributeStrings(fixedAttributes, newline + indent(3))
+    def fixedAttributeWrites = if (fixedAttributes.isEmpty) "" else
+      newline + indent(3) + buildAttributesString(fixedAttributes, 3)
     def makeWritesAttribute = if (attributes.isEmpty && fixedAttributes.isEmpty) <source></source>
       else if (longAttribute) {
         val cases = attributes collect {
@@ -434,14 +435,16 @@ class GenSource(val schema: SchemaDecl,
       var attr: scala.xml.MetaData  = scala.xml.Null
       __obj.{makeParamName(ATTRS_PARAM, false)}.toList map {{
         {caseString}case (key, x) => attr = scala.xml.Attribute((x.namespace map {{ __scope.getPrefix(_) }}).orNull, x.key.orNull, x.value.toString, attr)
-      }}
-      { fixedAttributeWrites }
+      }}{
+          fixedAttributeWrites
+      }
       attr
     }}</source>
       } else <source>    override def writesAttribute(__obj: {fqn}, __scope: scala.xml.NamespaceBinding): scala.xml.MetaData = {{
       var attr: scala.xml.MetaData  = scala.xml.Null
-      { attributes.map(x => buildAttributeString(x)).mkString(newline + indent(3)) }
-      { fixedAttributeWrites }
+      {
+        buildAttributesString(attributes, 3) + fixedAttributeWrites
+      }
       attr
     }}</source>
 
